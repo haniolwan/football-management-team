@@ -3,7 +3,6 @@ import { faker } from "@faker-js/faker";
 import httpStatus from "http-status";
 import httpMocks from "node-mocks-http";
 import moment from "moment";
-import bcrypt from "bcryptjs";
 import app from "../../src/app";
 import config from "../../src/config/config";
 import auth from "../../src/middlewares/auth";
@@ -20,9 +19,10 @@ setupTestDB();
 
 describe("Auth routes", () => {
   describe("POST /v1/auth/register", () => {
-    let newUser: { email: string; password: string };
+    let newUser: { name: string; email: string; password: string };
     beforeEach(() => {
       newUser = {
+        name: faker.name.fullName(),
         email: faker.internet.email().toLowerCase(),
         password: "password1",
       };
@@ -37,10 +37,9 @@ describe("Auth routes", () => {
       expect(res.body.user).not.toHaveProperty("password");
       expect(res.body.user).toEqual({
         id: expect.anything(),
-        name: null,
+        name: newUser.name,
         email: newUser.email,
         role: Role.USER,
-        isEmailVerified: false,
       });
 
       const dbUser = await prisma.user.findUnique({
@@ -49,10 +48,9 @@ describe("Auth routes", () => {
       expect(dbUser).toBeDefined();
       expect(dbUser?.password).not.toBe(newUser.password);
       expect(dbUser).toMatchObject({
-        name: null,
+        name: newUser.name,
         email: newUser.email,
         role: Role.USER,
-        isEmailVerified: false,
       });
 
       expect(res.body.tokens).toEqual({
@@ -123,8 +121,6 @@ describe("Auth routes", () => {
         id: expect.anything(),
         name: userOne.name,
         email: userOne.email,
-        // role: userOne.role,
-        isEmailVerified: userOne.isEmailVerified,
       });
 
       expect(res.body.user).toEqual(

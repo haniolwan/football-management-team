@@ -16,7 +16,7 @@ import { RegisterTeamResponse } from "../types/response";
 const createUser = async (
   email: string,
   password: string,
-  name?: string
+  name: string
 ): Promise<User> => {
   if (await getUserByEmail(email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Email already taken");

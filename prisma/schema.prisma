@@ -54,7 +54,7 @@ model Team {
 }
 
 model Player {
-  id          Int          @id @default(autoincrement())
+  id          String       @id @default(uuid())
   name        String
   position    PositionType
   age         Int

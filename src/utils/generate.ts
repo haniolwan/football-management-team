@@ -29,6 +29,7 @@ export const generateRandomPlayers = (teamId: number) => {
   for (const group of playersToCreate) {
     for (let i = 0; i < group.count; i++) {
       players.push({
+        id: faker.datatype.uuid(),
         name: faker.name.fullName(),
         position: group.position,
         age: faker.datatype.number({ min: 18, max: 35 }),
