@@ -6,6 +6,8 @@ const allRoles = {
     "generatePlayers",
     "registerUserWithTeamAndPlayers",
     "getUserTeam",
+    "getPlayer",
+    "listPlayer",
   ],
   [Role.ADMIN]: [],
 };

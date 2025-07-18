@@ -6,6 +6,22 @@ import { playerController } from "../../controllers";
 const router = express.Router();
 
 router
+  .route("/list/:id")
+  .post(
+    auth("listPlayer"),
+    validate(playerValidation.getPlayer),
+    playerController.listPlayer
+  );
+
+router
+  .route("/:id")
+  .get(
+    auth("getPlayer"),
+    validate(playerValidation.getPlayer),
+    playerController.getPlayer
+  );
+
+router
   .route("/")
   .get(
     auth("getPlayers"),
@@ -84,4 +100,62 @@ export default router;
  *                   type: integer
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
+ */
+
+/**
+ * @swagger
+ * /players/{id}:
+ *   get:
+ *     summary: Get player
+ *     description: Get player by id.
+ *     tags: [Players]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the player to list
+ *     responses:
+ *       200:
+ *         description: Player retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Player'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         description: Player not found
+ */
+
+/**
+ * @swagger
+ * /players/list/{id}:
+ *   post:
+ *     summary: List selected player
+ *     description: List a player for market sale.
+ *     tags: [Players]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the player to list
+ *     responses:
+ *       200:
+ *         description: Player listed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Player'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         description: Player not found
  */

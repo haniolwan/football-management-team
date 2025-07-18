@@ -1,8 +1,7 @@
 import { Player, PositionType } from "@prisma/client";
-import { playerService, userService } from "../services";
+import { playerService } from "../services";
 import catchAsync from "../utils/catchAsync";
 import pick from "../utils/pick";
-import { faker } from "@faker-js/faker";
 
 const getPlayers = catchAsync(async (req, res) => {
   const filter = pick(req.body, ["name"]);
@@ -11,6 +10,18 @@ const getPlayers = catchAsync(async (req, res) => {
   res.send(result);
 });
 
+const getPlayer = catchAsync(async (req, res) => {
+  const result = await playerService.getPlayerById(req.params.id);
+  res.send(result);
+});
+
+const listPlayer = catchAsync(async (req, res) => {
+  const result = await playerService.listPlayer(req.params.id);
+  res.send(result);
+});
+
 export default {
   getPlayers,
+  getPlayer,
+  listPlayer,
 };

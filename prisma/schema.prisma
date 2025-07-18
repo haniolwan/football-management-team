@@ -61,6 +61,7 @@ model Player {
   nationality String
   value       Int
   rating      Int
+  isListed    Boolean      @default(false)
   team        Team?        @relation(fields: [teamId], references: [id])
   teamId      Int?
   createdAt   DateTime     @default(now())

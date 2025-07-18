@@ -10,6 +10,13 @@ const getPlayers = {
   }),
 };
 
+const getPlayer = {
+  params: Joi.object().keys({
+    id: Joi.string(),
+  }),
+};
+
 export default {
   getPlayers,
+  getPlayer,
 };

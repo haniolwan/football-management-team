@@ -16,4 +16,5 @@ export const playerShape = {
   value: expect.any(Number),
   rating: expect.any(Number),
   teamId: expect.any(Number),
+  isListed: expect.any(Boolean),
 };

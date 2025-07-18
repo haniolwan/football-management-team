@@ -37,6 +37,7 @@ export const generateRandomPlayers = (teamId: number) => {
         value: faker.datatype.number(PLAYER_VALUE_RANGE),
         rating: faker.datatype.number(RATING_RANGE),
         teamId,
+        isListed: false,
       });
     }
   }

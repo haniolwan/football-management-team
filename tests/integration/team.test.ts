@@ -2,13 +2,13 @@ import { beforeAll, describe, expect, test } from "@jest/globals";
 import httpStatus from "http-status";
 import request from "supertest";
 import app from "../../src/app";
-import { User } from "@prisma/client";
+import { Player, User } from "@prisma/client";
+import { getAuthenticatedUser, getCreatedPlayer } from "../utils/authHelper";
+import { playerShape, teamShape } from "../fixtures/player.matchers";
 import {
   GetTeamResponse,
   RegisterTeamResponse,
 } from "../../src/types/response";
-import { getAuthenticatedUser } from "../utils/authHelper";
-import { playerShape, teamShape } from "../fixtures/user.matchers";
 
 describe("Team routes", () => {
   let accessToken: string;
@@ -87,6 +87,91 @@ describe("Team routes", () => {
     test("should return 401", async () => {
       const res = await request(app)
         .get("/v1/users/team")
+        .set("Authorization", `Bearer fake_token`)
+        .expect(httpStatus.UNAUTHORIZED);
+    });
+  });
+
+  describe("GET /v1/players", () => {
+    test("should get all listed players on market data", async () => {
+      const res = await request(app)
+        .get("/v1/players")
+        .set("Authorization", `Bearer ${accessToken}`)
+        .expect(httpStatus.OK);
+
+      expect(res.status).toBe(httpStatus.OK);
+
+      const response = res.body as Player[] | [];
+      expect(Array.isArray(response)).toBe(true);
+
+      if (response.length === 0) {
+        expect(response).toEqual([]);
+      } else {
+        expect(response.length).toBeGreaterThan(0);
+        expect(response).toEqual(
+          expect.arrayContaining([expect.objectContaining(playerShape)])
+        );
+      }
+    });
+
+    test("should return 401", async () => {
+      const res = await request(app)
+        .get("/v1/players")
+        .set("Authorization", `Bearer fake_token`)
+        .expect(httpStatus.UNAUTHORIZED);
+    });
+  });
+
+  describe("POST /v1/players/list/:id", () => {
+    let createdPlayer: Player;
+    beforeAll(async () => {
+      const { player } = await getCreatedPlayer(dbUser.id);
+      createdPlayer = player;
+    });
+
+    test("should list selected player to for sale market", async () => {
+      const res = await request(app)
+        .post(`/v1/players/list/${createdPlayer.id}`)
+        .set("Authorization", `Bearer ${accessToken}`)
+        .expect(httpStatus.OK);
+
+      expect(res.status).toBe(httpStatus.OK);
+
+      const playerResponse = res.body as Player;
+      expect(playerResponse).toMatchObject(playerShape);
+      expect(playerResponse.isListed).toEqual(true);
+    });
+
+    test("should return 404 if player not found", async () => {
+      const res = await request(app)
+        .post(`/v1/players/list/fakeId`)
+        .set("Authorization", `Bearer ${accessToken}`)
+        .expect(httpStatus.NOT_FOUND);
+
+      expect(res.body).toEqual(
+        expect.objectContaining({
+          code: 404,
+          message: "Player not found",
+        })
+      );
+    });
+
+    test("should return 200 if player already listed", async () => {
+      const res = await request(app)
+        .post(`/v1/players/list/${createdPlayer.id}`)
+        .set("Authorization", `Bearer ${accessToken}`)
+        .expect(httpStatus.OK);
+
+      expect(res.status).toBe(httpStatus.OK);
+
+      const playerResponse = res.body as Player;
+      expect(playerResponse).toMatchObject(playerShape);
+      expect(playerResponse.isListed).toEqual(true);
+    });
+
+    test("should return 401", async () => {
+      const res = await request(app)
+        .get("/v1/players")
         .set("Authorization", `Bearer fake_token`)
         .expect(httpStatus.UNAUTHORIZED);
     });
