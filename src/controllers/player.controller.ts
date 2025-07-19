@@ -6,13 +6,13 @@ import ApiError from "../utils/ApiError";
 import httpStatus from "http-status";
 
 const getPlayers = catchAsync(async (req, res) => {
-  const filter = pick(req.body, ["name"]);
+  const filter = pick(req.query, ["team_name", "name", "askingPrice"]);
   const options = pick(req.body, ["sortBy", "limit", "page"]);
   const result = await playerService.queryPlayers(filter, options);
   res.send(result);
 });
 
-const getPlayer = catchAsync(async (req, res) => {
+const getPlayerById = catchAsync(async (req, res) => {
   const result = await playerService.getPlayerById(req.params.id);
   res.send(result);
 });
@@ -59,7 +59,7 @@ const purchasePlayer = catchAsync(async (req, res) => {
 
 export default {
   getPlayers,
-  getPlayer,
+  getPlayerById,
   listPlayer,
   unListPlayer,
   purchasePlayer,

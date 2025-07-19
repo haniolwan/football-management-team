@@ -1,3 +1,5 @@
+import { PositionType } from "@prisma/client";
+
 export interface TokenResponse {
   token: string;
   expires: Date;
@@ -16,21 +18,21 @@ export interface RegisterTeamResponse {
 
 export interface GetTeamResponse {
   Team: {
-    id: 0;
-    name: "string";
-    budget: 0;
-    userId: 0;
+    id: number;
+    name: string;
+    budget: number;
+    userId: number;
   };
-  players: [
+  Player: [
     {
-      id: 0;
-      name: "string";
-      position: "Goalkeeper";
-      age: 0;
-      nationality: "string";
-      value: 0;
-      rating: 0;
-      teamId: 0;
+      id: string;
+      name: string;
+      position: PositionType;
+      age: number;
+      nationality: string;
+      value: number;
+      rating: number;
+      teamId: number;
     }
   ];
 }

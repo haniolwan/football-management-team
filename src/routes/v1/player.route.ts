@@ -26,7 +26,7 @@ router
   .get(
     auth("getPlayer"),
     validate(playerValidation.getPlayer),
-    playerController.getPlayer
+    playerController.getPlayerById
   );
 
 router
@@ -49,7 +49,7 @@ export default router;
  * @swagger
  * /players:
  *   get:
- *     summary: Get all players
+ *     summary: Get market all players
  *     description: Fetch a list of players with optional filters.
  *     tags: [Players]
  *     security:
@@ -61,21 +61,16 @@ export default router;
  *           type: string
  *         description: Filter by player name
  *       - in: query
- *         name: position
+ *         name: team name
  *         schema:
  *           type: string
- *           enum: [Goalkeeper, Defender, Midfielder, Attacker]
- *         description: Filter by player position
- *       - in: query
- *         name: nationality
- *         schema:
- *           type: string
- *         description: Filter by nationality
+ *         description: Filter by team name
  *       - in: query
  *         name: sortBy
  *         schema:
  *           type: string
- *         description: Sort field (e.g., value:asc)
+ *         example: askingPrice:asc
+ *         description: Sort by fields [ Name, Price, Team ]
  *       - in: query
  *         name: limit
  *         schema:

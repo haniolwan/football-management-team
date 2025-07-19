@@ -40,6 +40,7 @@ describe("Auth routes", () => {
         name: newUser.name,
         email: newUser.email,
         role: Role.USER,
+        teamId: null,
       });
 
       const dbUser = await prisma.user.findUnique({

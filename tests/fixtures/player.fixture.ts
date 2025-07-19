@@ -4,7 +4,7 @@ import { $Enums, Prisma } from "@prisma/client";
 
 export const teamOne = {
   id: faker.datatype.number({ min: 1, max: 10000 }),
-  name: faker.name.fullName(),
+  name: "Fake_team",
   budget: 5000000,
 };
 

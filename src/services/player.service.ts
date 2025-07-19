@@ -5,7 +5,7 @@ import httpStatus from "http-status";
 
 /**
  * Query for market players
- * @param {Object} filter - Prisma filter
+ * @param {{ name?: string, team_name?: string }} filter
  * @param {Object} options - Query options
  * @param {string} [options.sortBy] - Sort option in the format: sortField:(desc|asc)
  * @param {number} [options.limit] - Maximum number of results per page (default = 10)
@@ -13,7 +13,7 @@ import httpStatus from "http-status";
  * @returns {Promise<QueryResult>}
  */
 const queryPlayers = async <Key extends keyof Player>(
-  filter: object,
+  filter: { name?: string; price?: number; team_name?: string },
   options: {
     limit?: number;
     page?: number;
@@ -31,22 +31,44 @@ const queryPlayers = async <Key extends keyof Player>(
     "askingPrice",
     "rating",
     "teamId",
+    "team",
   ] as Key[]
 ): Promise<Pick<Player, Key>[]> => {
   const page = options.page ?? 1;
   const limit = options.limit ?? 10;
-  const sortBy = options.sortBy;
   const sortType = options.sortType ?? "desc";
+  const select = keys.reduce((obj, k) => ({ ...obj, [k]: true }), {});
+  let sortBy = options.sortBy || "";
 
-  const players = prisma.player.findMany({
-    where: { ...filter, isListed: true, askingPrice: { not: null } },
-    select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
+  const allowedSortFields = ["askingPrice"];
+  if (!allowedSortFields.includes(sortBy)) sortBy = "askingPrice";
+
+  const players = await prisma.player.findMany({
+    where: {
+      isListed: true,
+      askingPrice: { not: null },
+      ...(filter.name && {
+        name: {
+          contains: filter.name,
+          mode: "insensitive",
+        },
+      }),
+      ...(filter.team_name && {
+        team: {
+          name: {
+            contains: filter.team_name,
+            mode: "insensitive",
+          },
+        },
+      }),
+    },
+    select,
     skip: (page - 1) * limit,
     take: limit,
     orderBy: sortBy ? { [sortBy]: sortType } : undefined,
   });
 
-  return players as Promise<Pick<Player, Key>[]>;
+  return players as Pick<Player, Key>[];
 };
 
 /**
