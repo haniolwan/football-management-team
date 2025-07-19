@@ -24,6 +24,7 @@ const loginUserWithEmailAndPassword = async (
     "name",
     "password",
     "role",
+    "teamId",
     "createdAt",
     "updatedAt",
   ]);

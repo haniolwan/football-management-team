@@ -9,8 +9,16 @@ router
   .route("/list/:id")
   .post(
     auth("listPlayer"),
-    validate(playerValidation.getPlayer),
+    validate(playerValidation.listPlayer),
     playerController.listPlayer
+  );
+
+router
+  .route("/unlist/:id")
+  .post(
+    auth("listPlayer"),
+    validate(playerValidation.getPlayer),
+    playerController.unListPlayer
   );
 
 router
@@ -136,7 +144,7 @@ export default router;
  * /players/list/{id}:
  *   post:
  *     summary: List selected player
- *     description: List a player for market sale.
+ *     description: List a player for market sale by setting an asking price. The price can be above or below the player's actual value.
  *     tags: [Players]
  *     security:
  *       - bearerAuth: []
@@ -147,9 +155,52 @@ export default router;
  *         schema:
  *           type: string
  *         description: ID of the player to list
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - askingPrice
+ *             properties:
+ *               askingPrice:
+ *                 type: number
+ *                 description: Price to list the player for on the transfer market
+ *             example:
+ *               askingPrice: 50000
  *     responses:
  *       200:
  *         description: Player listed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Player'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         description: Player not found
+ */
+
+/**
+ * @swagger
+ * /players/unlist/{id}:
+ *   post:
+ *     summary: Un-list selected player
+ *     description: Un-list player from market sale.
+ *     tags: [Players]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the player to un-list
+ *     responses:
+ *       200:
+ *         description: Player un-listed successfully
  *         content:
  *           application/json:
  *             schema:

@@ -16,6 +16,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Token     Token[]
+  teamId    Int?
   Team      Team[]
 }
 
@@ -62,6 +63,7 @@ model Player {
   value       Int
   rating      Int
   isListed    Boolean      @default(false)
+  askingPrice Int?
   team        Team?        @relation(fields: [teamId], references: [id])
   teamId      Int?
   createdAt   DateTime     @default(now())

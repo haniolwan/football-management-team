@@ -1,10 +1,9 @@
-import { Player, TokenType, User } from "@prisma/client";
+import { TokenType, User } from "@prisma/client";
 import prisma from "../../src/client";
 import { insertUsers, userOne } from "../fixtures/user.fixture";
 import moment from "moment";
 import config from "../../src/config/config";
 import { tokenService } from "../../src/services";
-import { insertPlayers, playerOne } from "../fixtures/player.fixture";
 
 export const getAuthenticatedUser = async (): Promise<{
   user: User;
@@ -22,20 +21,5 @@ export const getAuthenticatedUser = async (): Promise<{
   return {
     user,
     token,
-  };
-};
-
-export const getCreatedPlayer = async (
-  userId: number
-): Promise<{
-  player: Player;
-}> => {
-  await insertPlayers(userId, [playerOne]);
-  const player = (await prisma.player.findFirst({
-    where: { id: playerOne.id },
-  })) as Player;
-
-  return {
-    player,
   };
 };

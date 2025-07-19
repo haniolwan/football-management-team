@@ -16,7 +16,20 @@ const getPlayer = {
   }),
 };
 
+const listPlayer = {
+  params: Joi.object().keys({
+    id: Joi.string(),
+  }),
+
+  body: Joi.object()
+    .keys({
+      askingPrice: Joi.number(),
+    })
+    .min(1),
+};
+
 export default {
   getPlayers,
   getPlayer,
+  listPlayer,
 };

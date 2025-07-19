@@ -1,4 +1,4 @@
-import { Player, Prisma } from "@prisma/client";
+import { Player } from "@prisma/client";
 import prisma from "../client";
 import ApiError from "../utils/ApiError";
 import httpStatus from "http-status";
@@ -20,7 +20,18 @@ const queryPlayers = async <Key extends keyof Player>(
     sortBy?: string;
     sortType?: "asc" | "desc";
   },
-  keys: Key[] = ["id", "name"] as Key[]
+  keys: Key[] = [
+    "id",
+    "name",
+    "isListed",
+    "age",
+    "value",
+    "position",
+    "nationality",
+    "askingPrice",
+    "rating",
+    "teamId",
+  ] as Key[]
 ): Promise<Pick<Player, Key>[]> => {
   const page = options.page ?? 1;
   const limit = options.limit ?? 10;
@@ -28,9 +39,9 @@ const queryPlayers = async <Key extends keyof Player>(
   const sortType = options.sortType ?? "desc";
 
   const players = prisma.player.findMany({
-    where: { ...filter, isListed: true },
+    where: { ...filter, isListed: true, askingPrice: { not: null } },
     select: keys.reduce((obj, k) => ({ ...obj, [k]: true }), {}),
-    skip: page * limit,
+    skip: (page - 1) * limit,
     take: limit,
     orderBy: sortBy ? { [sortBy]: sortType } : undefined,
   });
@@ -54,6 +65,7 @@ const getPlayerById = async <Key extends keyof Player>(
     "value",
     "position",
     "nationality",
+    "askingPrice",
     "rating",
     "teamId",
     "createdAt",
@@ -68,26 +80,120 @@ const getPlayerById = async <Key extends keyof Player>(
 
 /**
  * List player by id
+ * @param {ObjectId} teamId
  * @param {ObjectId} playerId
+ * @param {Int} askingPrice
+ * @param {boolean} listed
  * @returns {Promise<Player>}
  */
-const listPlayer = async (playerId: string): Promise<Player> => {
+const listPlayer = async (
+  teamId: number | null,
+  playerId: string,
+  askingPrice: number | null,
+  listed: boolean
+): Promise<Player> => {
+  const allPlayers = await prisma.player.findMany({
+    where: { teamId },
+  });
+  const unListedPlayersCount = allPlayers.filter(
+    player => !player.isListed
+  ).length;
+
+  if (listed && unListedPlayersCount <= 15) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      "Team must have at-least 15 active players"
+    );
+  }
+
   const player = await getPlayerById(playerId);
   if (!player) {
     throw new ApiError(httpStatus.NOT_FOUND, "Player not found");
   }
-  if (player.isListed) {
+  if (player.isListed === listed) {
     return player;
   }
   const updatedPlayer = await prisma.player.update({
     where: { id: player.id },
-    data: { isListed: true },
+    data: { isListed: listed, askingPrice: askingPrice },
   });
+
   return updatedPlayer;
+};
+
+/**
+ * Purchase player by id
+ * @param {ObjectId} teamId
+ * @param {ObjectId} playerId
+ * @returns {void}
+ */
+const purchasePlayer = async (teamId: number, playerId: string) => {
+  const allPlayers = await prisma.player.count({
+    where: { teamId },
+  });
+
+  if (allPlayers >= 25) {
+    throw new ApiError(
+      httpStatus.FORBIDDEN,
+      "Player limit exceeded: You can't have more than 25 players."
+    );
+  }
+  const player = await getPlayerById(playerId);
+
+  if (!player) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Player not found");
+  }
+
+  const team = await prisma.team.findUnique({ where: { id: teamId } });
+
+  if (!team) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Team not found");
+  }
+
+  if (player.askingPrice == null || team.budget == null) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Missing price or budget info");
+  }
+
+  if (player.askingPrice > team.budget) {
+    throw new ApiError(httpStatus.FORBIDDEN, "Player price is over budget");
+  }
+
+  return await prisma.$transaction(async tx => {
+    const finalPlayerCheck = await tx.player.findUnique({
+      where: { id: player.id },
+      select: { isListed: true, teamId: true },
+    });
+
+    if (!finalPlayerCheck?.isListed) {
+      throw new ApiError(httpStatus.FORBIDDEN, "Player is no longer listed");
+    }
+
+    if (finalPlayerCheck.teamId === team.id) {
+      throw new ApiError(httpStatus.FORBIDDEN, "You already own this player");
+    }
+
+    await tx.player.update({
+      where: { id: player.id },
+      data: { teamId: team.id, isListed: false },
+    });
+
+    const finalPrice = Math.floor(player.askingPrice! * 0.95);
+
+    await tx.team.update({
+      where: { id: team.id },
+      data: { budget: { decrement: finalPrice } },
+    });
+
+    await tx.team.update({
+      where: { id: finalPlayerCheck.teamId! },
+      data: { budget: { increment: finalPrice } },
+    });
+  });
 };
 
 export default {
   queryPlayers,
   getPlayerById,
   listPlayer,
+  purchasePlayer,
 };
