@@ -20,7 +20,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Create .env file
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "JWT_ACCESS_EXPIRATION_MINUTES=${{ secrets.JWT_ACCESS_EXPIRATION_MINUTES }}" >> .env
+          echo "JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}" >> .env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
       - name: Run tests
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: npm test
 
       - name: Build project
@@ -46,5 +59,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /var/www/football-management-team
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "JWT_ACCESS_EXPIRATION_MINUTES=${{ secrets.JWT_ACCESS_EXPIRATION_MINUTES }}" >> .env
+            echo "JWT_REFRESH_EXPIRATION_DAYS=${{ secrets.JWT_REFRESH_EXPIRATION_DAYS }}" >> .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
             npm install --omit=dev
             pm2 reload all
