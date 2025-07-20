@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "repository": "https://github.com/haniolwan/football-management-team",
   "scripts": {
-    "start": "yarn build && pm2 start ecosystem.config.json --no-daemon",
+    "start": "npm run build && pm2 start ecosystem.config.js --no-daemon",
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
     "test": "cross-env NODE_ENV=test npm run db:push && jest -i --colors --verbose --detectOpenHandles",
     "test:watch": "cross-env NODE_ENV=test npm run db:push && jest -i --watchAll",
