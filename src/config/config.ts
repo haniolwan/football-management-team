@@ -36,7 +36,7 @@ export default {
   port: envVars.PORT,
   jwt: {
     secret: envVars.JWT_SECRET,
-    accessExpirationMinutes: envVars.JWT_ACCESS_EXPIRATION_MINUTES,
-    refreshExpirationDays: envVars.JWT_REFRESH_EXPIRATION_DAYS,
+    accessExpirationMinutes: parseInt(envVars.JWT_ACCESS_EXPIRATION_MINUTES),
+    refreshExpirationDays: parseInt(envVars.JWT_REFRESH_EXPIRATION_DAYS),
   },
 };
