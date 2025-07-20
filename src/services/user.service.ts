@@ -1,11 +1,9 @@
-import { User, Role, Prisma, PositionType, Team } from "@prisma/client";
+import { User, Prisma, Team } from "@prisma/client";
 import httpStatus from "http-status";
 import prisma from "../client";
 import ApiError from "../utils/ApiError";
 import { encryptPassword } from "../utils/encryption";
-import { faker } from "@faker-js/faker";
 import { generateRandomPlayers } from "../utils/generate";
-import exclude from "../utils/exclude";
 import { RegisterTeamResponse } from "../types/response";
 
 /**
