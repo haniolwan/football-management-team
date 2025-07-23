@@ -18,6 +18,7 @@ export const playerOne = {
   value: 20000,
   rating: 80,
   teamId: teamOne.id,
+  askingPrice: 20000,
 };
 
 export const insertPlayers = async (

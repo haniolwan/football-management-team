@@ -2,6 +2,7 @@ import { Player } from "@prisma/client";
 import prisma from "../client";
 import ApiError from "../utils/ApiError";
 import httpStatus from "http-status";
+import ApiSuccess from "../utils/ApiSuccess";
 
 /**
  * Query for market players
@@ -13,7 +14,12 @@ import httpStatus from "http-status";
  * @returns {Promise<QueryResult>}
  */
 const queryPlayers = async <Key extends keyof Player>(
-  filter: { name?: string; price?: number; team_name?: string },
+  filter: {
+    name?: string;
+    price?: number;
+    team_name?: string;
+    isListed?: boolean;
+  },
   options: {
     limit?: number;
     page?: number;
@@ -38,14 +44,14 @@ const queryPlayers = async <Key extends keyof Player>(
   const limit = options.limit ?? 10;
   const sortType = options.sortType ?? "desc";
   const select = keys.reduce((obj, k) => ({ ...obj, [k]: true }), {});
-  let sortBy = options.sortBy || "";
+  let sortBy = options.sortBy ?? "";
 
   const allowedSortFields = ["askingPrice"];
   if (!allowedSortFields.includes(sortBy)) sortBy = "askingPrice";
 
   const players = await prisma.player.findMany({
     where: {
-      isListed: true,
+      ...(filter.isListed !== undefined && { isListed: filter.isListed }),
       askingPrice: { not: null },
       ...(filter.name && {
         name: {
@@ -172,7 +178,7 @@ const purchasePlayer = async (teamId: number, playerId: string) => {
     throw new ApiError(httpStatus.NOT_FOUND, "Team not found");
   }
 
-  if (player.askingPrice == null || team.budget == null) {
+  if (player.askingPrice === null || team.budget === null) {
     throw new ApiError(httpStatus.FORBIDDEN, "Missing price or budget info");
   }
 
@@ -190,10 +196,6 @@ const purchasePlayer = async (teamId: number, playerId: string) => {
       throw new ApiError(httpStatus.FORBIDDEN, "Player is no longer listed");
     }
 
-    if (finalPlayerCheck.teamId === team.id) {
-      throw new ApiError(httpStatus.FORBIDDEN, "You already own this player");
-    }
-
     await tx.player.update({
       where: { id: player.id },
       data: { teamId: team.id, isListed: false },
@@ -209,6 +211,14 @@ const purchasePlayer = async (teamId: number, playerId: string) => {
     await tx.team.update({
       where: { id: finalPlayerCheck.teamId! },
       data: { budget: { increment: finalPrice } },
+    });
+
+    const playerUpdated = await tx.player.findFirst({
+      where: { id: playerId },
+    });
+
+    return new ApiSuccess(httpStatus.OK, "Player Bought Successfully", {
+      player: playerUpdated,
     });
   });
 };

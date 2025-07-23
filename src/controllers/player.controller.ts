@@ -4,9 +4,15 @@ import catchAsync from "../utils/catchAsync";
 import pick from "../utils/pick";
 import ApiError from "../utils/ApiError";
 import httpStatus from "http-status";
+import ApiSuccess from "../utils/ApiSuccess";
 
 const getPlayers = catchAsync(async (req, res) => {
-  const filter = pick(req.query, ["team_name", "name", "askingPrice"]);
+  const filter = pick(req.query, [
+    "team_name",
+    "name",
+    "askingPrice",
+    "isListed",
+  ]);
   const options = pick(req.body, ["sortBy", "limit", "page"]);
   const result = await playerService.queryPlayers(filter, options);
   res.send(result);
@@ -25,13 +31,16 @@ const listPlayer = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated");
   }
 
-  const result = await playerService.listPlayer(
+  const player = await playerService.listPlayer(
     user.teamId,
     req.params.id,
     askingPrice,
     true
   );
-  res.send(result);
+
+  res.send(
+    new ApiSuccess(httpStatus.OK, "Player transferred successfully", { player })
+  );
 });
 
 const unListPlayer = catchAsync(async (req, res) => {
@@ -50,8 +59,13 @@ const unListPlayer = catchAsync(async (req, res) => {
 });
 
 const purchasePlayer = catchAsync(async (req, res) => {
+  const user = req.user as User;
+
+  if (!user || !user.id) {
+    throw new ApiError(httpStatus.UNAUTHORIZED, "User not authenticated");
+  }
   const result = await playerService.purchasePlayer(
-    req.params.teamId,
+    Number(req.params.teamId),
     req.params.playerId
   );
   res.send(result);

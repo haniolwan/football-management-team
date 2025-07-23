@@ -37,6 +37,14 @@ router
     playerController.getPlayers
   );
 
+router
+  .route("/purchase/:teamId/:playerId")
+  .post(
+    auth("purchasePlayer"),
+    validate(playerValidation.purchasePlayer),
+    playerController.purchasePlayer
+  );
+
 export default router;
 /**
  * @swagger
@@ -196,6 +204,39 @@ export default router;
  *     responses:
  *       200:
  *         description: Player un-listed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Player'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ *       404:
+ *         description: Player not found
+ */
+
+/**
+ * @swagger
+ * /players/{teamId}/{playerId}:
+ *   post:
+ *     summary: Purchase selected player
+ *     description: Purchase player from the selected team.
+ *     tags: [Players]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: teamId
+ *         schema:
+ *           type: string
+ *         description: ID of the team from which to purchase the player
+ *       - in: path
+ *         name: playerId
+ *         schema:
+ *           type: string
+ *         description: ID of the player to be purchased
+ *     responses:
+ *       200:
+ *         description: Player bought successfully
  *         content:
  *           application/json:
  *             schema:

@@ -4,6 +4,8 @@ import config from "../config/config";
 import { Token, TokenType } from "@prisma/client";
 import prisma from "../client";
 import { AuthTokensResponse } from "../types/response";
+import ApiError from "../utils/ApiError";
+import httpStatus from "http-status";
 
 /**
  * Generate token
@@ -69,7 +71,7 @@ const verifyToken = async (token: string, type: TokenType): Promise<Token> => {
     where: { token, type, userId, blacklisted: false },
   });
   if (!tokenData) {
-    throw new Error("Token not found");
+    throw new ApiError(httpStatus.NOT_FOUND, "Token Not Found");
   }
   return tokenData;
 };

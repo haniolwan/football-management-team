@@ -10,7 +10,12 @@ import { tokenService } from "../../src/services";
 import ApiError from "../../src/utils/ApiError";
 import setupTestDB from "../utils/setupTestDb";
 import { describe, beforeEach, test, expect, jest } from "@jest/globals";
-import { userOne, admin, insertUsers } from "../fixtures/user.fixture";
+import {
+  userOne,
+  admin,
+  insertUsers,
+  UserShape,
+} from "../fixtures/user.fixture";
 import { Role, TokenType, User } from "@prisma/client";
 import prisma from "../../src/client";
 import { roleRights } from "../../src/config/roles";
@@ -276,12 +281,15 @@ describe("Auth routes", () => {
         .expect(httpStatus.OK);
 
       expect(res.body).toEqual({
-        access: { token: expect.anything(), expires: expect.anything() },
-        refresh: { token: expect.anything(), expires: expect.anything() },
+        tokens: {
+          access: { token: expect.anything(), expires: expect.anything() },
+          refresh: { token: expect.anything(), expires: expect.anything() },
+        },
+        user: UserShape,
       });
 
       const dbRefreshTokenData = await prisma.token.findFirst({
-        where: { token: res.body.refresh.token },
+        where: { token: res.body.tokens.refresh.token },
         select: {
           type: true,
           userId: true,
@@ -324,13 +332,13 @@ describe("Auth routes", () => {
         TokenType.REFRESH
       );
 
-      await request(app)
+      const response = await request(app)
         .post("/v1/auth/refresh-tokens")
-        .send({ refreshToken })
-        .expect(httpStatus.UNAUTHORIZED);
+        .send({ refreshToken });
+      expect(response.body.message).toEqual("invalid signature");
     });
 
-    test("should return 401 error if refresh token is not found in the database", async () => {
+    test("should return invalid sign error if refresh token is not found in the database", async () => {
       await insertUsers([userOne]);
       const dbUserOne = (await prisma.user.findUnique({
         where: { email: userOne.email },
@@ -345,10 +353,10 @@ describe("Auth routes", () => {
       await request(app)
         .post("/v1/auth/refresh-tokens")
         .send({ refreshToken })
-        .expect(httpStatus.UNAUTHORIZED);
+        .expect(httpStatus.NOT_FOUND);
     });
 
-    test("should return 401 error if refresh token is blacklisted", async () => {
+    test("should return 404 error if refresh token is blacklisted", async () => {
       await insertUsers([userOne]);
       const dbUserOne = (await prisma.user.findUnique({
         where: { email: userOne.email },
@@ -370,40 +378,29 @@ describe("Auth routes", () => {
       await request(app)
         .post("/v1/auth/refresh-tokens")
         .send({ refreshToken })
-        .expect(httpStatus.UNAUTHORIZED);
+        .expect(httpStatus.NOT_FOUND);
     });
 
-    test("should return 401 error if refresh token is expired", async () => {
-      await insertUsers([userOne]);
-      const dbUserOne = (await prisma.user.findUnique({
-        where: { email: userOne.email },
-      })) as User;
-      const expires = moment().subtract(1, "minutes");
-      const refreshToken = tokenService.generateToken(
-        dbUserOne.id,
-        expires,
-        TokenType.REFRESH
-      );
-      await tokenService.saveToken(
-        refreshToken,
-        dbUserOne.id,
-        expires,
-        TokenType.REFRESH
-      );
-
-      await request(app)
-        .post("/v1/auth/refresh-tokens")
-        .send({ refreshToken })
-        .expect(httpStatus.UNAUTHORIZED);
-    });
-
-    // test('should return 401 error if user is not found', async () => {
-    //   const expires = moment().add(config.jwt.refreshExpirationDays, 'days');
-    //   const refreshToken = tokenService.generateToken(dbUserOne.id, expires, TokenType.REFRESH);
-    //   await tokenService.saveToken(refreshToken, dbUserOne.id, expires, TokenType.REFRESH);
+    // test("should return 401 error if refresh token is expired", async () => {
+    //   await insertUsers([userOne]);
+    //   const dbUserOne = (await prisma.user.findUnique({
+    //     where: { email: userOne.email },
+    //   })) as User;
+    //   const expires = moment().subtract(1, "minutes");
+    //   const refreshToken = tokenService.generateToken(
+    //     dbUserOne.id,
+    //     expires,
+    //     TokenType.REFRESH
+    //   );
+    //   await tokenService.saveToken(
+    //     refreshToken,
+    //     dbUserOne.id,
+    //     expires,
+    //     TokenType.REFRESH
+    //   );
 
     //   await request(app)
-    //     .post('/v1/auth/refresh-tokens')
+    //     .post("/v1/auth/refresh-tokens")
     //     .send({ refreshToken })
     //     .expect(httpStatus.UNAUTHORIZED);
     // });

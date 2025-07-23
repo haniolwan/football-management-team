@@ -5,7 +5,11 @@ const register = {
   body: Joi.object().keys({
     name: Joi.string().required(),
     email: Joi.string().required().email(),
-    password: Joi.string().required().custom(password),
+    password: Joi.string().required().custom(password).messages({
+      "password.min": "Password must be at least 8 characters",
+      "password.pattern":
+        "Password must contain at least 1 letter and 1 number",
+    }),
   }),
 };
 
@@ -17,6 +21,12 @@ const login = {
 };
 
 const logout = {
+  body: Joi.object().keys({
+    refreshToken: Joi.string().required(),
+  }),
+};
+
+const getUserInfo = {
   body: Joi.object().keys({
     refreshToken: Joi.string().required(),
   }),
@@ -57,4 +67,5 @@ export default {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  getUserInfo,
 };

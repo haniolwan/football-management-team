@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, test } from "@jest/globals";
+import { beforeAll, describe, expect, test } from "@jest/globals";
 import httpStatus from "http-status";
 import request from "supertest";
 import app from "../../src/app";
@@ -9,7 +9,12 @@ import {
   GetTeamResponse,
   RegisterTeamResponse,
 } from "../../src/types/response";
-import { createDefaultPlayers, getCreatedPlayer } from "../utils/playerHelper";
+import {
+  createDefaultPlayers,
+  getCreatedPlayer,
+  listPlayer,
+} from "../utils/playerHelper";
+import { teamOne } from "../fixtures/player.fixture";
 
 describe("Team routes", () => {
   let accessToken: string;
@@ -144,13 +149,13 @@ describe("Team routes", () => {
         expect(res.body).toEqual([]);
       } else {
         expect(res.body.length).toBeGreaterThan(0);
-        expect(res.body[0]).toEqual(createdPlayer);
+        expect(res.body[0]).toMatchObject({ ...playerShape, team: teamShape });
       }
     });
 
     test("should get all listed players on market data: Filter by Asking Price", async () => {
       const res = await request(app)
-        .get(`/v1/players?sortBy=askingPrice&sortType=asc`)
+        .get(`/v1/players?sortBy=askingPrice&sortType=desc`)
         .set("Authorization", `Bearer ${accessToken}`)
         .expect(httpStatus.OK);
 
@@ -210,7 +215,7 @@ describe("Team routes", () => {
         .expect(httpStatus.OK);
       expect(res.status).toBe(httpStatus.OK);
 
-      const playerResponse = res.body as Player;
+      const playerResponse = res.body.data.player as Player;
       expect(playerResponse).toMatchObject(playerShape);
       expect(playerResponse.isListed).toEqual(true);
     });
@@ -262,7 +267,7 @@ describe("Team routes", () => {
 
       expect(res.status).toBe(httpStatus.OK);
 
-      const playerResponse = res.body as Player;
+      const playerResponse = res.body.data.player as Player;
       expect(playerResponse).toMatchObject(playerShape);
       expect(playerResponse.isListed).toEqual(true);
     });

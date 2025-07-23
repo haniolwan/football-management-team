@@ -1,6 +1,6 @@
 import { Player } from "@prisma/client";
 import prisma from "../../src/client";
-import { userService } from "../../src/services";
+import { playerService, userService } from "../../src/services";
 import { insertPlayers, playerOne } from "../fixtures/player.fixture";
 
 export const getCreatedPlayer = async (
@@ -34,4 +34,17 @@ export const createDefaultPlayers = async (
     userId
   );
   return playersCreated;
+};
+
+export const listPlayer = async (
+  teamId: number | null,
+  playerId: string
+): Promise<Player> => {
+  const updatedPlayer = await playerService.listPlayer(
+    teamId,
+    playerId,
+    20000,
+    true
+  );
+  return updatedPlayer;
 };

@@ -77,15 +77,7 @@ const queryUsers = async <Key extends keyof User>(
  */
 const getUserById = async <Key extends keyof User>(
   id: number,
-  keys: Key[] = [
-    "id",
-    "email",
-    "name",
-    "password",
-    "role",
-    "createdAt",
-    "updatedAt",
-  ] as Key[]
+  keys: Key[] = ["id", "email", "name", "teamId", "role"] as Key[]
 ): Promise<Pick<User, Key> | null> => {
   return prisma.user.findUnique({
     where: { id },
@@ -188,11 +180,17 @@ const registerUserWithTeamAndPlayers = async (
       data: players,
     });
 
+    await tx.user.update({
+      where: { id: user.id },
+      data: { teamId: team.id },
+    });
+
     return {
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
+        teamId: team.id,
       },
       team,
       playersCreated: players,
@@ -229,7 +227,12 @@ const getUserTeam = async (userId: number): Promise<Team> => {
       throw new ApiError(httpStatus.NOT_FOUND, "Team not found");
     }
 
-    return team;
+    const result = {
+      ...team,
+      players: team.Player,
+    };
+
+    return result;
   });
 };
 

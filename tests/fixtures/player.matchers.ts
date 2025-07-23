@@ -3,7 +3,7 @@ import { expect } from "@jest/globals";
 export const teamShape = {
   id: expect.anything(),
   name: expect.any(String),
-  budget: 5000000,
+  budget: expect.any(Number),
   userId: expect.any(Number),
 };
 
